@@ -776,3 +776,82 @@ db.grades.aggregate([
   "epreuve_mieux_reussie": "exam"
 }
 ```
+
+# TD 2: MapReduce
+
+## Outputs
+
+### 2. Mono processeur
+**Code:**
+```python
+def word_count_single_processor(data_lines):
+    """
+    Counts word occurrences using a single processor.
+    Measures and returns the time taken.
+    """
+    start_time = time.time()
+    word_counts = Counter()
+    
+    for line in data_lines:
+        words = line.split()
+        word_counts.update(words)
+    
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    return word_counts, elapsed_time
+```
+
+**Single-Processor Time Taken:** 8.4327 seconds
+
+### 3.Multi-processeurs
+
+**Map function:**
+```python
+def map_function(text_chunk):
+    """Fonction de map : retourne un dictionnaire des fréquences de mots pour le morceau de texte."""
+    word_freq = {}
+    for word in text_chunk.split():
+        if word in word_freq:
+            word_freq[word] += 1
+        else:
+            word_freq[word] = 1
+    return word_freq
+```
+
+**Reduce function:**
+```python
+def reduce_function(counter_a, counter_b):
+    """Reduce function: merges two word count dictionaries by summing counts."""
+    for word, count in counter_b.items():
+        if word in counter_a:
+            counter_a[word] += count
+        else:
+            counter_a[word] = count
+    return counter_a
+```
+
+**Average time taken with 2 processors on 5 runs:** 10.245 +/- 0.477 seconds
+
+**Average time taken with 3 processors on 5 runs:** 9.321 +/- 0.110 seconds
+
+**Average time taken with 4 processors on 5 runs:** 8.863 +/- 0.262 seconds
+
+(**Average time taken with 1 processors on 5 runs:** 10.374 +/- 0.159 seconds)
+
+### 4. Visualisation
+
+![image](images/Distribution%20of%20Total%20Execution%20Time%20vs.%20Number%20of%20Processes.png)
+
+![image](images/Distribution%20of%20Chunking,%20Mapping,%20and%20Reducing%20Times%20vs.%20Number%20of%20Processes.png)
+
+Le multi-processing diminue légèrement le temps total d'exécution par rapport à l'exécution séquentielle. Avec 1 processus, le temps moyen est autour de 10,5 s. En augmentant le nombre de processus (2 à 4), une légère réduction est observée, atteignant environ 9 s avec 4 processus. L'amélioration reste modérée et dépend du coût de gestion des processus parallèles.
+
+### 5. Conclusion
+
+**Avantages de MapReduce**
+- **Scalabilité** : Permet de traiter de grandes données en les divisant en tâches indépendantes.
+- **Tolérance aux pannes** : Réessaie uniquement les tâches échouées.
+- **Équilibrage de charge** : Répartit les tâches pour une meilleure utilisation des ressources.
+- **Simplicité** : Structure claire avec les phases chunking, mapping et reducing.
+
+Bien que MapReduce facilite le traitement distribué, les gains de performance restent limités pour certaines tâches peu complexes.
